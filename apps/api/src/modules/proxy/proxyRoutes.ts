@@ -51,7 +51,8 @@ proxyRouter.get('/api/proxy/youtube/:videoId', authenticate, (req: Request, res:
       noPlaylist: true,
       format: formatString,
       noWarnings: true,
-      extractorArgs: 'youtube:player_client=android'
+      forceIpv4: true,
+      extractorArgs: 'youtube:player_client=android,tv;player_skip=webpage'
     };
     
     // We fetch the metadata to get the direct Google Video URL
