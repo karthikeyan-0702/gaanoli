@@ -5,5 +5,5 @@ providers = ["node"]
 YOUTUBE_DL_SKIP_PYTHON_CHECK = "1"
 
 [phases.setup]
-# Install ffmpeg and python3 (just in case yt-dlp needs it for some extractors)
-nixPkgs = ["ffmpeg", "python3"]
+# Use "..." to keep default Node.js packages, then add our custom ones
+nixPkgs = ["...", "ffmpeg", "python3"]
