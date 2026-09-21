@@ -37,7 +37,9 @@ healthRouter.get('/health/ready', async (_req, res) => {
     };
   }
 
-  const isHealthy = dbStatus.isHealthy && redisStatus.isHealthy && storageStatus.isHealthy;
+  // Make Redis optional for overall health so the app doesn't crash on Railway
+  // if Redis is missing (background downloads will just fail, but proxy works)
+  const isHealthy = dbStatus.isHealthy && storageStatus.isHealthy;
 
   res.status(isHealthy ? 200 : 503).json({
     status: isHealthy ? 'ready' : 'degraded',
