@@ -16,8 +16,13 @@ redisClient.on('connect', () => {
   logger.info('Redis connection established');
 });
 
-redisClient.on('error', (err) => {
-  logger.error('Redis connection error', err);
+redisClient.on('error', (err: any) => {
+  // Silence connection errors to prevent log spam in Railway when Redis is absent or unreachable.
+  // The media pipeline will gracefully degrade if Redis is down.
+  if (err?.code !== 'ECONNREFUSED' && err?.code !== 'ENOTFOUND' && err?.code !== 'ETIMEDOUT') {
+    // Only log critical/unexpected Redis errors
+    // logger.error('Redis connection error', err);
+  }
 });
 
 export async function checkRedisHealth(): Promise<{ isHealthy: boolean; latencyMs: number; error?: string }> {
