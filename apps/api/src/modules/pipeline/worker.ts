@@ -216,7 +216,7 @@ export function initMediaWorker(): Worker<MediaDownloadJobData> {
     }
   );
 
-  worker.on('error', (err: any) => {
+  worker.on('error', () => {
     // Suppress all background worker connection errors. 
     // They are non-fatal and just mean background downloads won't work.
   });
