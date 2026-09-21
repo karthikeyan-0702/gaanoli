@@ -46,7 +46,7 @@ async function bootstrap() {
   }
 
   // Initialize BullMQ worker only if a remote Redis is configured
-  let mediaWorker;
+  let mediaWorker: ReturnType<typeof initMediaWorker> | undefined;
   if (!config.REDIS_URL.includes('127.0.0.1') && !config.REDIS_URL.includes('localhost')) {
     mediaWorker = initMediaWorker();
     logger.info('BullMQ Media Pipeline worker initialized');
