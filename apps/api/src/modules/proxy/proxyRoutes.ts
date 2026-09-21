@@ -6,8 +6,6 @@ import https from 'https';
 
 export const proxyRouter = Router();
 
-proxyRouter.use(authenticate);
-
 const ALLOWED_QUALITIES = new Set(['1080p', '720p', '480p', '360p']);
 
 function resolveFormat(quality: unknown): string {
@@ -26,7 +24,7 @@ function resolveFormat(quality: unknown): string {
  * The client never touches youtube.com directly.
  * Uses yt-dlp (via youtube-dl-exec) to mux and stream reliably.
  */
-proxyRouter.get('/api/proxy/youtube/:videoId', (req: Request, res: Response) => {
+proxyRouter.get('/api/proxy/youtube/:videoId', authenticate, (req: Request, res: Response) => {
   const { videoId } = req.params;
 
   if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
@@ -101,7 +99,7 @@ proxyRouter.get('/api/proxy/youtube/:videoId', (req: Request, res: Response) => 
 /**
  * Video Download — downloads YouTube video as a file through the GaanOli server.
  */
-proxyRouter.get('/api/proxy/youtube/:videoId/download', requireAdmin, (req: Request, res: Response) => {
+proxyRouter.get('/api/proxy/youtube/:videoId/download', authenticate, requireAdmin, (req: Request, res: Response) => {
   const { videoId } = req.params;
 
   if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
