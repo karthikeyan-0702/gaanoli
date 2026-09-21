@@ -101,7 +101,19 @@ async function bootstrap() {
   process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 }
 
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('UNHANDLED REJECTION:', reason);
+  process.exit(1);
+});
+
 bootstrap().catch((err) => {
+  console.error('FATAL BOOTSTRAP ERROR:', err?.message || err);
+  if (err?.stack) console.error(err.stack);
   logger.error('Fatal failure during server bootstrap', err);
   process.exit(1);
 });
