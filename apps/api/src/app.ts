@@ -75,7 +75,11 @@ export function createApp(): express.Application {
       }
     })();
 
-    if (requestOrigin && !allowedOriginSet.has(requestOrigin)) {
+    const isSameOrigin = 
+      requestOrigin === `http://${req.headers.host}` || 
+      requestOrigin === `https://${req.headers.host}`;
+
+    if (requestOrigin && !allowedOriginSet.has(requestOrigin) && !isSameOrigin) {
       res.status(403).json({
         success: false,
         error: { code: 'FORBIDDEN', message: 'Request origin is not allowed' }
