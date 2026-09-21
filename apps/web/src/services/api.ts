@@ -133,14 +133,28 @@ class ApiClient {
   }
 
   // Search & Videos
-  public async searchVideos(query = '', source = 'all', limit = 50, order = 'relevance'): Promise<Video[]> {
+  public async searchVideos(query = '', source = 'all', limit = 50, order = 'relevance', pageToken?: string): Promise<{ data: Video[], nextPageToken?: string }> {
     const params = new URLSearchParams();
     if (query) params.append('query', query);
     if (source !== 'all') params.append('source', source);
     params.append('limit', limit.toString());
     if (order !== 'relevance') params.append('order', order);
+    if (pageToken) params.append('pageToken', pageToken);
 
-    return this.request(`/api/search?${params.toString()}`);
+    const url = `${this.baseUrl}/api/search?${params.toString()}`;
+    const res = await fetch(url, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const contentType = res.headers.get('content-type') || '';
+    const json = contentType.includes('application/json') ? await res.json() : null;
+
+    if (!res.ok) throw new Error(this.extractErrorMessage(json, res.status, res.statusText));
+    
+    return { data: json?.data || [], nextPageToken: json?.nextPageToken };
   }
 
   public async getFeed(): Promise<Video[]> {

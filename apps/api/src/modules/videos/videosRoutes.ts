@@ -23,8 +23,14 @@ videosRouter.get('/api/search', authenticate, async (req: AuthenticatedRequest, 
       ).catch(() => {}); // fire-and-forget
     }
 
-    const videos = await videosService.searchVideos(queryDto.query, queryDto.source, queryDto.limit, queryDto.order);
-    res.json({ success: true, data: videos });
+    const searchResult = await videosService.searchVideos(
+      queryDto.query, 
+      queryDto.source, 
+      queryDto.limit, 
+      queryDto.order, 
+      queryDto.pageToken
+    );
+    res.json({ success: true, data: searchResult.items, nextPageToken: searchResult.nextPageToken });
   } catch (err) {
     next(err);
   }

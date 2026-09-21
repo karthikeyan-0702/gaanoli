@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { Play, Filter } from 'lucide-react';
 import { formatDuration } from '../lib/utils';
 import { getThumbnailSrc } from '../utils/imageProxy';
@@ -43,12 +43,42 @@ export function DiscoverPage() {
     if (o !== order) setOrder(o);
   }, [searchParams]);
 
-  // Query: show all videos when no search term, search results when searching
-  const { data: videos = [], isLoading, isFetching } = useQuery<Video[]>({
+  // Query: useInfiniteQuery for pagination
+  const { 
+    data, 
+    isLoading, 
+    isFetching,
+    isFetchingNextPage, 
+    hasNextPage, 
+    fetchNextPage 
+  } = useInfiniteQuery<{ data: Video[], nextPageToken?: string }>({
     queryKey: ['discover-videos', debouncedTerm, sourceFilter, order],
-    queryFn: () => api.searchVideos(debouncedTerm, sourceFilter, 50, order),
+    queryFn: ({ pageParam = undefined }) => api.searchVideos(debouncedTerm, sourceFilter, 50, order, pageParam as string | undefined),
+    getNextPageParam: (lastPage) => lastPage.nextPageToken || undefined,
+    initialPageParam: undefined,
     placeholderData: keepPreviousData
   });
+
+  const videos = data?.pages.flatMap((page) => page.data) || [];
+
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const target = observerTarget.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(target);
+    return () => observer.unobserve(target);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const filters = [
     { id: 'all', label: 'All' },
@@ -179,6 +209,16 @@ export function DiscoverPage() {
           </div>
         </>
       )}
+
+      {/* Loading Indicator for next page */}
+      {isFetchingNextPage && (
+        <div className="flex justify-center py-8">
+          <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+
+      {/* Sentinel element for intersection observer */}
+      <div ref={observerTarget} className="h-4" />
     </div>
   );
 }

@@ -145,7 +145,7 @@ export class VideosService {
     };
   }
 
-  async searchVideos(searchTerm: string, source = 'all', limit = 20, order: 'relevance' | 'date' = 'relevance'): Promise<Video[]> {
+  async searchVideos(searchTerm: string, source = 'all', limit = 50, order: 'relevance' | 'date' = 'relevance', pageToken?: string): Promise<{ items: Video[], nextPageToken?: string }> {
     let sql = `SELECT * FROM videos WHERE 1=1`;
     const params: any[] = [];
 
@@ -183,15 +183,20 @@ export class VideosService {
       updatedAt: row.updated_at
     }));
 
+    let nextPageToken: string | undefined = undefined;
+
     // If official YouTube API key is available, query YouTube search API and append non-duplicate results
     if (config.YOUTUBE_API_KEY && searchTerm.trim() && (source === 'all' || source === 'youtube')) {
       try {
         const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(
           searchTerm
-        )}&type=video&order=${order}&maxResults=50&key=${config.YOUTUBE_API_KEY}`;
+        )}&type=video&order=${order}&maxResults=50&key=${config.YOUTUBE_API_KEY}${pageToken ? `&pageToken=${pageToken}` : ''}`;
         const ytRes = await fetch(url);
         if (ytRes.ok) {
           const ytData = (await ytRes.json()) as any;
+          if (ytData.nextPageToken) {
+            nextPageToken = ytData.nextPageToken;
+          }
           logger.info('YouTube Search API succeeded', { resultCount: ytData.items?.length });
           const existingIds = new Set(localVideos.map((v) => v.sourceId));
 
@@ -221,6 +226,7 @@ export class VideosService {
             }
           }
 
+          const youtubeVideos: Video[] = [];
           const importPromises = [];
           for (const item of ytData.items || []) {
             const vidId = item.id?.videoId;
@@ -289,7 +295,7 @@ export class VideosService {
           // Await all imports in parallel for massive speedup
           const savedVideos = await Promise.all(importPromises);
           for (const saved of savedVideos) {
-            if (saved) localVideos.push(saved);
+            if (saved) youtubeVideos.push(saved);
           }
         } else {
           logger.warn('YouTube Search API returned non-OK status', { status: ytRes.status, statusText: ytRes.statusText });
@@ -299,7 +305,10 @@ export class VideosService {
       }
     }
 
-    return localVideos;
+    return {
+      items: [...(pageToken ? [] : localVideos), ...youtubeVideos],
+      nextPageToken
+    };
   }
 }
 

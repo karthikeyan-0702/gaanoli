@@ -13,11 +13,12 @@ import { getThumbnailSrc } from '../utils/imageProxy';
 export function GuestHomePage() {
   const { logout } = useAuth();
   // Automatically search for the required bhajans
-  const { data: videos = [], isLoading, isFetching } = useQuery<Video[]>({
+  const { data: searchResult, isLoading, isFetching } = useQuery<{ data: Video[], nextPageToken?: string }>({
     queryKey: ['videos', 'sathya sai baba bhajans'],
     queryFn: () => api.searchVideos('sathya sai baba bhajans'),
     placeholderData: keepPreviousData
   });
+  const videos = searchResult?.data || [];
 
   return (
     <div className="space-y-6">
