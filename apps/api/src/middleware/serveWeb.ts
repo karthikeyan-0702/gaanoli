@@ -1,9 +1,13 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { Express, Request, Response, NextFunction } from 'express';
 import express from 'express';
 import { config } from '../config/index.js';
 import { logger } from './logger.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export function attachWebStatic(app: Express): void {
   if (!config.SERVE_WEB_STATIC) {
