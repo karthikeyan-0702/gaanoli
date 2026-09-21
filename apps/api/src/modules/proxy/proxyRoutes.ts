@@ -54,7 +54,7 @@ proxyRouter.get('/api/proxy/youtube/:videoId', authenticate, (req: Request, res:
     };
     
     // We fetch the metadata to get the direct Google Video URL
-    youtubedl(youtubeUrl, ytdlOptions).then((data: any) => {
+    (youtubedl as any)(youtubeUrl, ytdlOptions).then((data: any) => {
       // Find the best URL that contains both video and audio
       // 'best' format string in yt-dlp usually guarantees a combined format, 
       // but we ensure we grab a valid URL.

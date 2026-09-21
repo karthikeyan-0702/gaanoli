@@ -5,7 +5,7 @@ services:
   - type: web
     name: gaanoli
     runtime: node
-    plan: starter
+    plan: free
     disk:
       name: gaanoli-storage
       mountPath: /var/data

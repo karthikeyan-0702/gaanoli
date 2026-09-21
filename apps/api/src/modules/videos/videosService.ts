@@ -183,6 +183,7 @@ export class VideosService {
       updatedAt: row.updated_at
     }));
 
+    const youtubeVideos: Video[] = [];
     let nextPageToken: string | undefined = undefined;
 
     // If official YouTube API key is available, query YouTube search API and append non-duplicate results
@@ -226,7 +227,6 @@ export class VideosService {
             }
           }
 
-          const youtubeVideos: Video[] = [];
           const importPromises = [];
           for (const item of ytData.items || []) {
             const vidId = item.id?.videoId;

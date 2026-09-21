@@ -11,9 +11,11 @@ videosRouter.get('/api/search', authenticate, async (req: AuthenticatedRequest, 
     const queryDto = SearchQuerySchema.parse({
       query: req.query.query || req.query.q || '',
       source: req.query.source || 'all',
-      limit: req.query.limit || 20,
-      order: req.query.order || 'relevance'
-    });
+      limit: req.query.limit || 20
+    }) as any;
+
+    const order = (req.query.order as 'relevance' | 'date') || 'relevance';
+    const pageToken = req.query.pageToken as string | undefined;
 
     // Record search term for personalized feed
     if (queryDto.query.trim()) {
@@ -27,8 +29,8 @@ videosRouter.get('/api/search', authenticate, async (req: AuthenticatedRequest, 
       queryDto.query, 
       queryDto.source, 
       queryDto.limit, 
-      queryDto.order, 
-      queryDto.pageToken
+      order, 
+      pageToken
     );
     res.json({ success: true, data: searchResult.items, nextPageToken: searchResult.nextPageToken });
   } catch (err) {
