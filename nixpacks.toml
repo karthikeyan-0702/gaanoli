@@ -1,5 +1,4 @@
-[providers]
-node = true
+providers = ["node"]
 
 [variables]
 # Skip Python check during npm ci, yt-dlp provides its own standalone binary for Linux
