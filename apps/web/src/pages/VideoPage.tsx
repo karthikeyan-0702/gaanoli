@@ -470,7 +470,7 @@ export function VideoPage() {
                 <div className="flex items-center gap-2 mt-1.5">
                   <button
                     type="button"
-                    onClick={() => navigate(`/discover?q=${encodeURIComponent(video.channelTitle)}`)}
+                    onClick={() => navigate(`/discover?q=${encodeURIComponent(video.channelTitle)}&order=date`)}
                     className="text-xs font-medium text-brand-300 hover:text-brand-200 hover:underline transition-colors cursor-pointer"
                   >
                     {video.channelTitle}

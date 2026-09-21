@@ -133,11 +133,12 @@ class ApiClient {
   }
 
   // Search & Videos
-  public async searchVideos(query = '', source = 'all', limit = 20): Promise<Video[]> {
+  public async searchVideos(query = '', source = 'all', limit = 50, order = 'relevance'): Promise<Video[]> {
     const params = new URLSearchParams();
     if (query) params.append('query', query);
     if (source !== 'all') params.append('source', source);
     params.append('limit', limit.toString());
+    if (order !== 'relevance') params.append('order', order);
 
     return this.request(`/api/search?${params.toString()}`);
   }

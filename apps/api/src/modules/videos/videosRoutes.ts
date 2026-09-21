@@ -11,7 +11,8 @@ videosRouter.get('/api/search', authenticate, async (req: AuthenticatedRequest, 
     const queryDto = SearchQuerySchema.parse({
       query: req.query.query || req.query.q || '',
       source: req.query.source || 'all',
-      limit: req.query.limit || 20
+      limit: req.query.limit || 20,
+      order: req.query.order || 'relevance'
     });
 
     // Record search term for personalized feed
@@ -22,7 +23,7 @@ videosRouter.get('/api/search', authenticate, async (req: AuthenticatedRequest, 
       ).catch(() => {}); // fire-and-forget
     }
 
-    const videos = await videosService.searchVideos(queryDto.query, queryDto.source, queryDto.limit);
+    const videos = await videosService.searchVideos(queryDto.query, queryDto.source, queryDto.limit, queryDto.order);
     res.json({ success: true, data: videos });
   } catch (err) {
     next(err);

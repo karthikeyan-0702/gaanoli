@@ -13,16 +13,21 @@ export function DiscoverPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const initialQuery = searchParams.get('q') || '';
+  const initialOrder = searchParams.get('order') || 'relevance';
   const [searchTerm, setSearchTerm] = useState(initialQuery);
   const [debouncedTerm, setDebouncedTerm] = useState(initialQuery);
+  const [order, setOrder] = useState(initialOrder);
   const [sourceFilter, setSourceFilter] = useState<string>('all');
 
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedTerm(searchTerm);
-      if (searchTerm.trim()) {
-        setSearchParams({ q: searchTerm.trim() }, { replace: true });
+      if (searchTerm.trim() || order !== 'relevance') {
+        const params: Record<string, string> = {};
+        if (searchTerm.trim()) params.q = searchTerm.trim();
+        if (order !== 'relevance') params.order = order;
+        setSearchParams(params, { replace: true });
       } else {
         setSearchParams({}, { replace: true });
       }
@@ -33,13 +38,15 @@ export function DiscoverPage() {
   // Sync URL params
   useEffect(() => {
     const q = searchParams.get('q') || '';
+    const o = searchParams.get('order') || 'relevance';
     if (q !== searchTerm) setSearchTerm(q);
+    if (o !== order) setOrder(o);
   }, [searchParams]);
 
   // Query: show all videos when no search term, search results when searching
   const { data: videos = [], isLoading, isFetching } = useQuery<Video[]>({
-    queryKey: ['discover-videos', debouncedTerm, sourceFilter],
-    queryFn: () => api.searchVideos(debouncedTerm, sourceFilter, 40),
+    queryKey: ['discover-videos', debouncedTerm, sourceFilter, order],
+    queryFn: () => api.searchVideos(debouncedTerm, sourceFilter, 50, order),
     placeholderData: keepPreviousData
   });
 
@@ -53,23 +60,37 @@ export function DiscoverPage() {
     <div className="space-y-5">
       {/* Filters */}
       <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Filter className="w-3.5 h-3.5 text-gt-text-muted" />
-          <div className="flex gap-1.5">
-            {filters.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setSourceFilter(f.id)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                  sourceFilter === f.id
-                    ? 'bg-gt-text text-gt-bg'
-                    : 'glass-panel text-gt-text-secondary hover:text-gt-text hover:bg-gt-hover'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-2">
+            <Filter className="w-3.5 h-3.5 text-gt-text-muted" />
+            <div className="flex gap-1.5">
+              {filters.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setSourceFilter(f.id)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                    sourceFilter === f.id
+                      ? 'bg-gt-text text-gt-bg'
+                      : 'glass-panel text-gt-text-secondary hover:text-gt-text hover:bg-gt-hover'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gt-text-muted font-medium">Sort by:</span>
+            <select
+              value={order}
+              onChange={(e) => setOrder(e.target.value)}
+              className="bg-gt-surface border border-gt-border text-sm rounded-xl px-3 py-1.5 text-gt-text outline-none focus:border-brand-500 cursor-pointer"
+            >
+              <option value="relevance">Relevance</option>
+              <option value="date">Upload Date</option>
+            </select>
           </div>
         </div>
       </div>
