@@ -20,9 +20,9 @@ async function bootstrap() {
     await checkMediaTools();
     logger.info('FFmpeg runtime verified');
   } catch (err) {
-    logger.error('Media runtime verification failed; refusing to start', err);
-    process.exit(1);
-    return;
+    logger.warn('Media runtime verification failed. Media processing will not work.', {
+      error: err instanceof Error ? err.message : err
+    });
   }
 
   if (config.NODE_ENV === 'production' && config.AUTH_DEV_MODE) {
