@@ -75,9 +75,10 @@ export function createApp(): express.Application {
       }
     })();
 
+    const proxyHost = req.get('host');
     const isSameOrigin = 
-      requestOrigin === `http://${req.headers.host}` || 
-      requestOrigin === `https://${req.headers.host}`;
+      requestOrigin === `http://${proxyHost}` || 
+      requestOrigin === `https://${proxyHost}`;
 
     if (requestOrigin && !allowedOriginSet.has(requestOrigin) && !isSameOrigin) {
       res.status(403).json({
