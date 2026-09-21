@@ -4,8 +4,6 @@
 [build]
 builder = "nixpacks"
 buildCommand = """
-apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/* && \
-npm ci && \
 npm run build --workspace=@gatube/shared && \
 VITE_USE_RELATIVE_API=true VITE_PRIVACY_MODE=true npm run build --workspace=@gatube/web && \
 npm run build --workspace=@gatube/api
