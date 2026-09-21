@@ -47,7 +47,11 @@ proxyRouter.get('/api/proxy/youtube/:videoId', authenticate, (req: Request, res:
       output: '-',
       format: formatString,
       mergeOutputFormat: 'webm',
-      jsRuntimes: 'node'
+      jsRuntimes: 'node',
+      noPlaylist: true,
+      quiet: true,
+      noWarnings: true,
+      extractorArgs: 'youtube:player_client=android'
     } as Record<string, unknown>);
     
     // Catch the execa promise rejection to prevent Node server crashes
@@ -126,7 +130,11 @@ proxyRouter.get('/api/proxy/youtube/:videoId/download', authenticate, requireAdm
       output: '-',
       format: formatString,
       mergeOutputFormat: 'webm',
-      jsRuntimes: 'node'
+      jsRuntimes: 'node',
+      noPlaylist: true,
+      quiet: true,
+      noWarnings: true,
+      extractorArgs: 'youtube:player_client=android'
     } as Record<string, unknown>);
     
     ytdlProcess.catch((err) => {
