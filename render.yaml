@@ -1,0 +1,72 @@
+# GaanOli on Render — API + web UI on ONE hostname (best for friends on Sophos PCs)
+# After deploy, set WEB_URL and API_URL to your service URL, e.g. https://gaanoli.onrender.com
+
+services:
+  - type: web
+    name: gaanoli
+    runtime: node
+    plan: starter
+    disk:
+      name: gaanoli-storage
+      mountPath: /var/data
+      sizeGB: 10
+    buildCommand: >-
+      apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/* &&
+      npm ci &&
+      npm run build --workspace=@gatube/shared &&
+      VITE_USE_RELATIVE_API=true VITE_PRIVACY_MODE=true npm run build --workspace=@gatube/web &&
+      npm run build --workspace=@gatube/api
+    startCommand: npm run start --workspace=@gatube/api
+    healthCheckPath: /health/ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SERVE_WEB_STATIC
+        value: true
+      - key: WEB_DIST_PATH
+        value: apps/web/dist
+      - key: CLIENT_PRIVACY_MODE
+        value: true
+      - key: STORAGE_DRIVER
+        value: local
+      - key: STORAGE_LOCAL_PATH
+        value: /var/data/storage
+      - key: FFMPEG_PATH
+        value: /usr/bin/ffmpeg
+      - key: FFPROBE_PATH
+        value: /usr/bin/ffprobe
+      - key: AUTH_DEV_MODE
+        value: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: GUEST_USERNAME
+        sync: false
+      - key: GUEST_PASSWORD_HASH
+        sync: false
+      - key: WEB_URL
+        sync: false
+      - key: API_URL
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gaanoli-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: gaanoli-redis
+          property: connectionString
+
+  - type: keyvalue
+    name: gaanoli-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+    ipAllowList: []
+
+databases:
+  - name: gaanoli-db
+    plan: free

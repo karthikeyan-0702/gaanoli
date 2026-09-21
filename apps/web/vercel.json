@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd ../.. && npm ci && npm run build --workspace=@gatube/shared && VITE_USE_RELATIVE_API=true VITE_PRIVACY_MODE=true npm run build --workspace=@gatube/web",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://REPLACE_WITH_YOUR_RENDER_SERVICE.onrender.com/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://REPLACE_WITH_YOUR_RENDER_SERVICE.onrender.com/health"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gatube_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gatube}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gatube_secret_change_in_prod}
+      POSTGRES_DB: ${POSTGRES_DB:-gatubedb}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - gatube_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gatube} -d ${POSTGRES_DB:-gatubedb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: gatube_redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    volumes:
+      - gatube_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  gatube_postgres_data:
+    name: gatube_postgres_data
+  gatube_redis_data:
+    name: gatube_redis_data

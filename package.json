@@ -1,0 +1,34 @@
+{
+  "name": "gatube",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GaTube — Production-grade personal video platform",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n \"api,web\" -c \"blue,magenta\" \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "npm run dev --workspace=@gatube/api",
+    "dev:web": "npm run dev --workspace=@gatube/web",
+    "build": "npm run build --workspaces --if-present",
+    "build:shared": "npm run build --workspace=@gatube/shared",
+    "build:api": "npm run build --workspace=@gatube/api",
+    "build:web": "npm run build --workspace=@gatube/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:migrate": "npm run db:migrate --workspace=@gatube/api",
+    "start": "npm run start --workspace=@gatube/api"
+  },
+  "keywords": [
+    "video",
+    "gatube",
+    "ffmpeg",
+    "bullmq",
+    "react"
+  ],
+  "author": "GaTube Engineering Team",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
+}
