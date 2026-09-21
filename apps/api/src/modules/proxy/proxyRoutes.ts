@@ -46,47 +46,78 @@ proxyRouter.get('/api/proxy/youtube/:videoId', authenticate, (req: Request, res:
     res.setHeader('Accept-Ranges', 'none');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
 
-    const ytdlProcess = youtubedl.exec(youtubeUrl, {
-      output: '-',
-      format: formatString,
+    const ytdlOptions: Record<string, unknown> = {
+      dumpJson: true,
       noPlaylist: true,
-      quiet: true,
-      noWarnings: true,
-      extractorArgs: 'youtube:player_client=android'
-    } as Record<string, unknown>);
+      format: formatString,
+      noWarnings: true
+    };
     
-    // Catch the execa promise rejection to prevent Node server crashes
-    ytdlProcess.catch((err) => {
-      logger.error('YouTube proxy stream promise rejected', { videoId, error: err.message });
-      if (!res.headersSent) {
-        res.status(500).json({ success: false, error: { code: 'STREAM_FAILED', message: 'Stream process failed' } });
+    // We fetch the metadata to get the direct Google Video URL
+    youtubedl(youtubeUrl, ytdlOptions).then((data: any) => {
+      // Find the best URL that contains both video and audio
+      // 'best' format string in yt-dlp usually guarantees a combined format, 
+      // but we ensure we grab a valid URL.
+      let directUrl = data.url;
+      if (!directUrl && data.formats) {
+         // Fallback to finding the best mp4 that has video and audio
+         const validFormat = data.formats.find((f: any) => f.acodec !== 'none' && f.vcodec !== 'none');
+         if (validFormat) directUrl = validFormat.url;
       }
-    });
 
-    if (ytdlProcess.stdout) {
-      ytdlProcess.stdout.pipe(res);
-    }
+      if (!directUrl) {
+        throw new Error('Could not extract direct stream URL');
+      }
 
-    ytdlProcess.on('error', (err: any) => {
-      logger.error('YouTube proxy stream error (process)', { videoId, error: err.message });
+      // Prepare headers for the proxy request
+      const proxyHeaders: Record<string, string> = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://www.youtube.com/'
+      };
+
+      // Support HTTP Range requests (crucial for MP4 seeking and fast startup)
+      if (req.headers.range) {
+        proxyHeaders['Range'] = req.headers.range;
+      }
+
+      // Proxy the stream
+      const proxyReq = https.get(directUrl, { headers: proxyHeaders }, (proxyRes) => {
+        // Forward HTTP status (200 or 206)
+        res.status(proxyRes.statusCode || 200);
+
+        // Forward essential headers
+        const headersToForward = ['content-type', 'content-length', 'content-range', 'accept-ranges'];
+        headersToForward.forEach((header) => {
+          if (proxyRes.headers[header]) {
+            res.setHeader(header, proxyRes.headers[header]!);
+          }
+        });
+        
+        res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+
+        // Pipe the video stream directly to the client
+        proxyRes.pipe(res);
+      });
+
+      proxyReq.on('error', (err) => {
+        logger.error('Error proxying video stream', { videoId, error: err.message });
+        if (!res.headersSent) res.status(500).end();
+      });
+
+      req.on('close', () => {
+        proxyReq.destroy();
+      });
+
+    }).catch((err: any) => {
+      logger.error('YouTube proxy failed to extract metadata', { videoId, error: err.message });
       if (!res.headersSent) {
         res.status(500).json({
           success: false,
-          error: { code: 'STREAM_FAILED', message: 'Stream failed' }
+          error: { code: 'STREAM_FAILED', message: 'Could not extract stream metadata.' }
         });
-      } else {
-        res.end();
       }
     });
 
-    req.on('close', () => {
-      if (ytdlProcess && !ytdlProcess.killed) {
-        ytdlProcess.kill('SIGKILL');
-      }
-      if (!res.writableEnded) {
-        res.end();
-      }
-    });
   } catch (err: any) {
     logger.error('YouTube proxy failed to start', { videoId, error: err.message });
     if (!res.headersSent) {
