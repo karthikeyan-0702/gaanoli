@@ -48,8 +48,14 @@ async function bootstrap() {
   // Initialize BullMQ worker only if a remote Redis is configured
   let mediaWorker: ReturnType<typeof initMediaWorker> | undefined;
   if (!config.REDIS_URL.includes('127.0.0.1') && !config.REDIS_URL.includes('localhost')) {
-    mediaWorker = initMediaWorker();
-    logger.info('BullMQ Media Pipeline worker initialized');
+    try {
+      mediaWorker = initMediaWorker();
+      logger.info('BullMQ Media Pipeline worker initialized');
+    } catch (err) {
+      logger.warn('Failed to initialize Media Worker (likely due to a Redis connection issue). Background downloads will not work.', {
+        error: err instanceof Error ? err.message : err
+      });
+    }
   } else {
     logger.warn('Skipping Media Worker initialization because REDIS_URL is local. Background downloads are disabled.');
   }
