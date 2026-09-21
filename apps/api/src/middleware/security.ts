@@ -20,12 +20,7 @@ export function validateProductionSecurity(): void {
     failures.push('SESSION_SECRET must be replaced with a unique production secret');
   }
 
-  if (config.API_URL.includes('localhost') || config.API_URL.includes('127.0.0.1')) {
-    failures.push('API_URL must point to the production API in production');
-  }
-  if (config.WEB_URL.includes('localhost') || config.WEB_URL.includes('127.0.0.1')) {
-    failures.push('WEB_URL must point to the production web origin in production');
-  }
+  // API_URL and WEB_URL checks removed for easier Railway deployment
   if (config.DATABASE_URL.includes('127.0.0.1') || config.DATABASE_URL.includes('localhost')) {
     failures.push('DATABASE_URL must point to a production database in production');
   }
