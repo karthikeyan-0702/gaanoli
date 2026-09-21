@@ -19,10 +19,16 @@ export async function runMigrations(): Promise<void> {
       );
     `);
 
-    const migrationsDir = path.resolve(__dirname, 'migrations');
+    let migrationsDir = path.resolve(__dirname, 'migrations');
     if (!fs.existsSync(migrationsDir)) {
-      logger.warn('No migrations directory found', { migrationsDir });
-      return;
+      // Fallback for when running from dist/ but .sql files weren't copied
+      const srcFallback = path.resolve(__dirname, '../../src/database/migrations');
+      if (fs.existsSync(srcFallback)) {
+        migrationsDir = srcFallback;
+      } else {
+        logger.warn('No migrations directory found', { migrationsDir, srcFallback });
+        return;
+      }
     }
 
     const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith('.sql')).sort();
