@@ -2,10 +2,14 @@ import { Redis } from 'ioredis';
 import { config } from '../config/index.js';
 import { logger } from '../middleware/logger.js';
 
+const isTls = config.REDIS_URL.startsWith('rediss://');
+
 export const redisClient = new Redis(config.REDIS_URL, {
   maxRetriesPerRequest: null, // Required for BullMQ
   enableReadyCheck: false,
-  lazyConnect: true
+  lazyConnect: true,
+  family: 0, // Railway uses IPv6 for internal networking
+  ...(isTls ? { tls: { rejectUnauthorized: false } } : {})
 });
 
 redisClient.on('connect', () => {

@@ -216,7 +216,11 @@ export function initMediaWorker(): Worker<MediaDownloadJobData> {
     }
   );
 
-  worker.on('error', (err) => {
+  worker.on('error', (err: any) => {
+    // Suppress spammy connection refused errors if Redis goes down or isn't fully configured
+    if (err.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED')) {
+      return;
+    }
     logger.error('Media worker encountered an error', err);
   });
 
