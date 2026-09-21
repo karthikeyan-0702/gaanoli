@@ -45,9 +45,14 @@ async function bootstrap() {
     return;
   }
 
-  // Initialize BullMQ worker
-  const mediaWorker = initMediaWorker();
-  logger.info('BullMQ Media Pipeline worker initialized');
+  // Initialize BullMQ worker only if a remote Redis is configured
+  let mediaWorker;
+  if (!config.REDIS_URL.includes('127.0.0.1') && !config.REDIS_URL.includes('localhost')) {
+    mediaWorker = initMediaWorker();
+    logger.info('BullMQ Media Pipeline worker initialized');
+  } else {
+    logger.warn('Skipping Media Worker initialization because REDIS_URL is local. Background downloads are disabled.');
+  }
 
   const app = createApp();
   const server = http.createServer(app);
@@ -66,7 +71,9 @@ async function bootstrap() {
     server.close(async () => {
       logger.info('HTTP server closed');
       try {
-        await mediaWorker.close();
+        if (mediaWorker) {
+          await mediaWorker.close();
+        }
         await closeDatabase();
         await closeRedis();
         logger.info('Worker, Database and Redis connections closed successfully');

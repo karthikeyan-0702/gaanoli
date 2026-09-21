@@ -10,10 +10,16 @@ export function attachWebStatic(app: Express): void {
     return;
   }
 
-  const webRoot = path.resolve(config.WEB_DIST_PATH);
+  let webRoot = path.resolve(config.WEB_DIST_PATH);
   if (!fs.existsSync(webRoot)) {
-    logger.warn('SERVE_WEB_STATIC is enabled but web dist folder was not found', { webRoot });
-    return;
+    // Fallback: If running inside apps/api, try to find it relative to the monorepo root
+    const rootFallback = path.resolve(__dirname, '../../../../../apps/web/dist');
+    if (fs.existsSync(rootFallback)) {
+      webRoot = rootFallback;
+    } else {
+      logger.warn('SERVE_WEB_STATIC is enabled but web dist folder was not found', { webRoot, rootFallback });
+      return;
+    }
   }
 
   logger.info('Serving web UI from disk (single-origin deployment)', { webRoot });
