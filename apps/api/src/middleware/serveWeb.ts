@@ -17,7 +17,8 @@ export function attachWebStatic(app: Express): void {
   let webRoot = path.resolve(config.WEB_DIST_PATH);
   if (!fs.existsSync(webRoot)) {
     // Fallback: If running inside apps/api, try to find it relative to the monorepo root
-    const rootFallback = path.resolve(__dirname, '../../../../../apps/web/dist');
+    // From /app/apps/api/dist/middleware -> /app/apps/web/dist requires 4 hops up
+    const rootFallback = path.resolve(__dirname, '../../../../apps/web/dist');
     if (fs.existsSync(rootFallback)) {
       webRoot = rootFallback;
     } else {
