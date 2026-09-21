@@ -1,0 +1,10 @@
+[providers]
+node = true
+
+[variables]
+# Skip Python check during npm ci, yt-dlp provides its own standalone binary for Linux
+YOUTUBE_DL_SKIP_PYTHON_CHECK = "1"
+
+[phases.setup]
+# Install ffmpeg and python3 (just in case yt-dlp needs it for some extractors)
+nixPkgs = ["ffmpeg", "python3"]

@@ -2,6 +2,9 @@
   "name": "gatube",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "description": "GaTube — Production-grade personal video platform",
   "workspaces": [
     "packages/*",
