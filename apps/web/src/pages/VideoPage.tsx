@@ -367,7 +367,7 @@ export function VideoPage() {
               {video.source === 'youtube' ? (
                 <source
                   src={getYoutubeStreamUrl(video.sourceId, quality)}
-                  type="video/webm"
+                  type="video/mp4"
                 />
               ) : (
                 videoStreamSrc && <source src={videoStreamSrc} type="video/mp4" />
@@ -468,7 +468,13 @@ export function VideoPage() {
                   {video.title}
                 </h1>
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-xs font-medium text-brand-300">{video.channelTitle}</span>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/discover?q=${encodeURIComponent(video.channelTitle)}`)}
+                    className="text-xs font-medium text-brand-300 hover:text-brand-200 hover:underline transition-colors cursor-pointer"
+                  >
+                    {video.channelTitle}
+                  </button>
                   <span className="text-gt-text-muted">•</span>
                   <Badge variant={video.source === 'youtube' ? 'neutral' : 'success'}>
                     {streamSourceLabel(video.source)}

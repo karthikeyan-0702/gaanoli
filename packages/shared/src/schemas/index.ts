@@ -4,7 +4,7 @@ export const SearchQuerySchema = z.object({
   // Empty query lists recent videos (Discover browse mode)
   query: z.string().trim().max(200, 'Search query too long').default(''),
   source: z.enum(['all', 'youtube', 'authorized_source', 'local']).default('all'),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
   pageToken: z.string().optional()
 });
 

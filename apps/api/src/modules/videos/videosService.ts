@@ -188,7 +188,7 @@ export class VideosService {
       try {
         const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(
           searchTerm
-        )}&type=video&maxResults=24&key=${config.YOUTUBE_API_KEY}`;
+        )}&type=video&maxResults=50&key=${config.YOUTUBE_API_KEY}`;
         const ytRes = await fetch(url);
         if (ytRes.ok) {
           const ytData = (await ytRes.json()) as any;

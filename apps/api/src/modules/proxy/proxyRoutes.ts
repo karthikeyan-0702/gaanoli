@@ -8,21 +8,24 @@ export const proxyRouter = Router();
 
 const ALLOWED_QUALITIES = new Set(['1080p', '720p', '480p', '360p']);
 
+/**
+ * Request a single, pre-muxed stream (video+audio already combined).
+ * This avoids the massive latency of ffmpeg re-muxing separate streams.
+ * Falls back to best combined format if the specific resolution isn't available.
+ */
 function resolveFormat(quality: unknown): string {
   const q = typeof quality === 'string' ? quality : '';
-  if (!q || !ALLOWED_QUALITIES.has(q)) {
-    return 'bestvideo[height<=720]+bestaudio/best';
-  }
-  if (q === '1080p') return 'bestvideo[height<=1080]+bestaudio/best';
-  if (q === '720p') return 'bestvideo[height<=720]+bestaudio/best';
-  if (q === '480p') return 'bestvideo[height<=480]+bestaudio/best';
-  return 'bestvideo[height<=360]+bestaudio/best';
+  if (q === '1080p') return 'best[height<=1080][ext=mp4]/best[height<=1080]/best';
+  if (q === '480p') return 'best[height<=480][ext=mp4]/best[height<=480]/best';
+  if (q === '360p') return 'best[height<=360][ext=mp4]/best[height<=360]/best';
+  // Default: 720p
+  return 'best[height<=720][ext=mp4]/best[height<=720]/best';
 }
 
 /**
  * Video Proxy — streams YouTube video through the GaanOli server.
  * The client never touches youtube.com directly.
- * Uses yt-dlp (via youtube-dl-exec) to mux and stream reliably.
+ * Uses yt-dlp (via youtube-dl-exec) to stream pre-muxed video directly.
  */
 proxyRouter.get('/api/proxy/youtube/:videoId', authenticate, (req: Request, res: Response) => {
   const { videoId } = req.params;
@@ -39,15 +42,13 @@ proxyRouter.get('/api/proxy/youtube/:videoId', authenticate, (req: Request, res:
   const formatString = resolveFormat(req.query.quality);
 
   try {
-    res.setHeader('Content-Type', 'video/webm');
-    res.setHeader('Accept-Ranges', 'none'); // yt-dlp stdout doesn't easily support range requests
+    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Accept-Ranges', 'none');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
 
     const ytdlProcess = youtubedl.exec(youtubeUrl, {
       output: '-',
       format: formatString,
-      mergeOutputFormat: 'webm',
-      jsRuntimes: 'node',
       noPlaylist: true,
       quiet: true,
       noWarnings: true,
@@ -121,16 +122,14 @@ proxyRouter.get('/api/proxy/youtube/:videoId/download', authenticate, requireAdm
   const formatString = resolveFormat(quality);
 
   try {
-    res.setHeader('Content-Type', 'video/webm');
-    res.setHeader('Content-Disposition', `attachment; filename="video-${videoId}.webm"`);
+    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Content-Disposition', `attachment; filename="video-${videoId}.mp4"`);
     res.setHeader('Accept-Ranges', 'none');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
 
     const ytdlProcess = youtubedl.exec(youtubeUrl, {
       output: '-',
       format: formatString,
-      mergeOutputFormat: 'webm',
-      jsRuntimes: 'node',
       noPlaylist: true,
       quiet: true,
       noWarnings: true,
