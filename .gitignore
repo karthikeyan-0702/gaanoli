@@ -18,8 +18,10 @@ build/
 .env.production.local
 
 # Storage & Uploads
-storage/
-downloads/
+/storage/
+/apps/api/storage/
+/downloads/
+/apps/api/downloads/
 temp/
 
 # Logs
